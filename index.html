@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<html lang="en">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Zoning Go-Go Tool — City of Bessemer City, NC</title>
-<link rel="preconnect" href="https://fonts.googleapis.com/">
-<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
-<link href="index_files/css2.css" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Noto+Serif:wght@400;600&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -75,12 +75,12 @@
   @media (max-width: 480px) { .detail-grid { grid-template-columns: 1fr; } .header-text h1 { font-size: 1rem; } }
 </style>
 </head>
-<body data-new-gr-c-s-check-loaded="8.937.0" data-gr-ext-installed="">
+<body>
 <div class="page-wrap">
   <header class="site-header">
     <div class="header-icon">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"></path>
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/>
       </svg>
     </div>
     <div class="header-text">
@@ -91,9 +91,9 @@
   <div class="card">
     <label class="search-label" for="addr-input">Enter your property address</label>
     <div class="search-row">
-      <input type="text" id="addr-input" class="search-input" placeholder="e.g. 132 W Virginia Ave" autocomplete="off" aria-label="Property street address">
+      <input type="text" id="addr-input" class="search-input" placeholder="e.g. 132 W Virginia Ave" autocomplete="off" aria-label="Property street address" />
       <button class="search-btn" id="search-btn" onclick="runSearch()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
         Look up
       </button>
     </div>
@@ -101,9 +101,7 @@
   </div>
   <div id="results"></div>
   <footer class="page-footer">
-    GIS data provided by Gaston County. Zoning information is for 
-general guidance only and does not constitute an official zoning 
-determination.<br>
+    GIS data provided by Gaston County. Zoning information is for general guidance only and does not constitute an official zoning determination.<br>
     For official determinations, contact the <a href="mailto:JWatkins@BessemerCity.com">Planning &amp; Zoning Department</a> at 704-629-5542.
   </footer>
 </div>
@@ -125,7 +123,9 @@ const JURIS_MAP = {
   'MCADENVILLE': { name: 'Town of McAdenville', type: 'other', phone: '704-824-3190', label: 'Town of McAdenville — Planning Department' },
   'COUNTY': { name: 'Gaston County (unincorporated)', type: 'other', phone: '704-866-3075', label: 'Gaston County — Building & Development Services' },
 };
+
 let _candidates = [];
+
 function normalizeJuris(raw) {
   if (!raw) return 'COUNTY';
   const u = raw.toUpperCase().trim();
@@ -145,21 +145,37 @@ function normalizeJuris(raw) {
   if (u === '100' || u.includes('COUNTY') || u.includes('UNINCORPORATED') || u === '') return 'COUNTY';
   return null;
 }
+
+function getCentroid(feature) {
+  try {
+    const rings = feature.geometry.rings;
+    if (!rings || !rings[0]) return null;
+    const ring = rings[0];
+    let x = 0, y = 0;
+    ring.forEach(pt => { x += pt[0]; y += pt[1]; });
+    return { x: x / ring.length, y: y / ring.length };
+  } catch(e) { return null; }
+}
+
 function formatAddress(a) {
   const parts = [a.WHOLE_ADDRESS, a.POSTAL, a.STATE, a.ZIP].filter(v => v && v !== 'NO ASSIGNED ADDRESS');
   return parts.join(', ').replace(/\s+/g, ' ').trim() || 'Address not on file';
 }
+
 function gisLink(akpar) { return `https://gis.gastoncountync.gov/Map/?pin=${encodeURIComponent(akpar)}`; }
 function extIcon() { return `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-1px"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>`; }
 function esc(str) { if (str == null) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function setResults(html) { document.getElementById('results').innerHTML = html; }
-function renderLoading() { setResults(`<div class="result-card"><span class="spinner"></span><span style="font-size:.9rem;color:#5A5A55">Searching Gaston County GIS…</span></div>`); }
+function renderLoading(msg) { setResults(`<div class="result-card"><span class="spinner"></span><span style="font-size:.9rem;color:#5A5A55">${msg || 'Searching Gaston County GIS…'}</span></div>`); }
+
 function renderError(msg) {
   setResults(`<div class="result-card error"><div class="result-eyebrow error">Connection error</div><div class="result-title">Couldn't reach the GIS database</div><div class="result-body">${esc(msg)}<br><br>You can search directly at <a href="https://gis.gastoncountync.gov/Map/" target="_blank">gis.gastoncountync.gov</a>, or call our office at <a href="tel:7046295542">704-629-5542</a> and we'll look it up for you.</div></div>`);
 }
+
 function renderNotFound(query) {
   setResults(`<div class="result-card"><div class="result-eyebrow neutral">No results</div><div class="result-title">Address not found</div><div class="result-body">We couldn't find <strong>"${esc(query)}"</strong> in the Gaston County parcel database.<br><br>Try shortening your search — just the house number and street name works best.<br><br><a href="https://gis.gastoncountync.gov/Map/" target="_blank" class="gis-link">${extIcon()} Search manually on Gaston County GIS</a></div></div>`);
 }
+
 function renderCandidates(features, query) {
   _candidates = features;
   const items = features.map((f, i) => {
@@ -172,39 +188,86 @@ function renderCandidates(features, query) {
   }).join('');
   setResults(`<div class="result-card"><div class="result-eyebrow neutral">Multiple matches</div><div class="result-title">Which address is yours?</div><div class="result-body">We found ${features.length} parcels matching <strong>"${esc(query)}"</strong>. Select yours below.</div><div class="candidates-list">${items}</div></div>`);
 }
+
 function selectCandidate(i) { renderParcelResult(_candidates[i]); }
-function renderParcelResult(feature) {
+
+async function getZoning(centroid) {
+  if (!centroid) return null;
+  try {
+    const res = await fetch(`/api/parcels?mode=zoning&x=${centroid.x}&y=${centroid.y}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.features && data.features.length > 0) {
+      return data.features[0].attributes;
+    }
+  } catch(e) { /* silent */ }
+  return null;
+}
+
+async function renderParcelResult(feature) {
   const a = feature.attributes;
   const addr = formatAddress(a);
   const jurisRaw = a.DIST_TWN || a.TAX_DISTRI || '';
   const jurisKey = normalizeJuris(jurisRaw);
   const jurisInfo = jurisKey ? JURIS_MAP[jurisKey] : null;
   const acres = a.DEEDAC ? parseFloat(a.DEEDAC).toFixed(2) + ' ac' : 'N/A';
-  const zoning = a.ZONING || 'Not on file';
   const owner = a.CURR_NAME1 || 'N/A';
   const link = gisLink(a.AKPAR);
   const debugBlock = `<button class="debug-toggle" onclick="toggleDebug(this)">show raw GIS data</button><div class="debug-box">${esc(JSON.stringify(a, null, 2))}</div>`;
+
   if (!jurisInfo) {
     setResults(`<div class="result-card redirect"><div class="result-eyebrow redirect">Jurisdiction unclear</div><div class="result-title">${esc(addr)}</div><div class="result-body">This parcel returned an unrecognized jurisdiction value: <strong>"${esc(jurisRaw)}"</strong>.<br><br>Please <a href="https://gis.gastoncountync.gov/Map/" target="_blank">check Gaston County GIS directly</a> or call our office at <a href="tel:7046295542">704-629-5542</a>.</div><a href="${link}" target="_blank" class="gis-link">${extIcon()} View this parcel on Gaston County GIS</a>${debugBlock}</div>`);
     return;
   }
-  if (jurisInfo.type === 'bc') {
-    setResults(`<div class="result-card success"><div class="result-eyebrow success">Bessemer City jurisdiction confirmed</div><div class="result-title">${esc(addr)}</div><div class="zoning-badge">Zoning district: ${esc(zoning)}</div><div class="detail-grid"><div class="detail-cell"><div class="detail-cell-label">Parcel ID</div><div class="detail-cell-value">${esc(a.AKPAR)}</div></div><div class="detail-cell"><div class="detail-cell-label">Parcel size</div><div class="detail-cell-value">${esc(acres)}</div></div><div class="detail-cell"><div class="detail-cell-label">Owner of record</div><div class="detail-cell-value">${esc(owner)}</div></div><div class="detail-cell"><div class="detail-cell-label">Jurisdiction</div><div class="detail-cell-value">Bessemer City</div></div></div><div class="contact-block"><strong>Questions about your zoning district?</strong>Planning &amp; Zoning Department &nbsp;·&nbsp;<a href="tel:7046295542">704-629-5542</a> &nbsp;·&nbsp;<a href="mailto:JWatkins@BessemerCity.com">JWatkins@BessemerCity.com</a></div><a href="${link}" target="_blank" class="gis-link">${extIcon()} View this parcel on Gaston County GIS</a>${debugBlock}</div>`);
-  } else {
+
+  if (jurisInfo.type !== 'bc') {
     setResults(`<div class="result-card redirect"><div class="result-eyebrow redirect">Outside Bessemer City jurisdiction</div><div class="result-title">${esc(addr)}</div><div class="result-body">This property is in <strong>${esc(jurisInfo.name)}'s</strong> planning jurisdiction — not Bessemer City's.<br><br>Even if your mailing address says "Bessemer City," what matters for zoning and permits is which municipality's limits or ETJ your parcel falls inside. Yours falls under ${esc(jurisInfo.name)}.</div><div class="contact-block"><strong>${esc(jurisInfo.label)}</strong><a href="tel:${jurisInfo.phone.replace(/\D/g,'')}">${esc(jurisInfo.phone)}</a></div><div class="detail-grid" style="margin-top:14px"><div class="detail-cell"><div class="detail-cell-label">Parcel ID</div><div class="detail-cell-value">${esc(a.AKPAR)}</div></div><div class="detail-cell"><div class="detail-cell-label">Jurisdiction on file</div><div class="detail-cell-value">${esc(jurisRaw)}</div></div></div><a href="${link}" target="_blank" class="gis-link">${extIcon()} View this parcel on Gaston County GIS</a>${debugBlock}</div>`);
+    return;
   }
+
+  // Bessemer City — show partial result while fetching zoning
+  setResults(`<div class="result-card success"><div class="result-eyebrow success">Bessemer City jurisdiction confirmed</div><div class="result-title">${esc(addr)}</div><div class="zoning-badge"><span class="spinner" style="width:14px;height:14px;margin-right:6px;border-width:2px"></span>Looking up zoning…</div></div>`);
+
+  const centroid = getCentroid(feature);
+  const zoning = await getZoning(centroid);
+  const zoningCode = zoning ? zoning.TYPE : null;
+  const zoningName = zoning ? zoning.NAME : null;
+  const zoningDisplay = zoningCode ? `${zoningCode} — ${zoningName}` : 'Not on file';
+  const isETJ = zoning && zoning.ETJ === 'YES';
+
+  setResults(`<div class="result-card success">
+    <div class="result-eyebrow success">Bessemer City jurisdiction confirmed${isETJ ? ' (ETJ)' : ''}</div>
+    <div class="result-title">${esc(addr)}</div>
+    <div class="zoning-badge">Zoning: ${esc(zoningDisplay)}</div>
+    <div class="detail-grid">
+      <div class="detail-cell"><div class="detail-cell-label">Parcel ID</div><div class="detail-cell-value">${esc(a.AKPAR)}</div></div>
+      <div class="detail-cell"><div class="detail-cell-label">Parcel size</div><div class="detail-cell-value">${esc(acres)}</div></div>
+      <div class="detail-cell"><div class="detail-cell-label">Owner of record</div><div class="detail-cell-value">${esc(owner)}</div></div>
+      <div class="detail-cell"><div class="detail-cell-label">Jurisdiction</div><div class="detail-cell-value">Bessemer City${isETJ ? ' ETJ' : ''}</div></div>
+    </div>
+    <div class="contact-block">
+      <strong>Questions about your zoning district?</strong>
+      Planning &amp; Zoning Department &nbsp;·&nbsp;
+      <a href="tel:7046295542">704-629-5542</a> &nbsp;·&nbsp;
+      <a href="mailto:JWatkins@BessemerCity.com">JWatkins@BessemerCity.com</a>
+    </div>
+    <a href="${link}" target="_blank" class="gis-link">${extIcon()} View this parcel on Gaston County GIS</a>
+    ${debugBlock}
+  </div>`);
 }
+
 function toggleDebug(btn) {
   const box = btn.nextElementSibling;
   const showing = box.style.display === 'block';
   box.style.display = showing ? 'none' : 'block';
   btn.textContent = showing ? 'show raw GIS data' : 'hide raw GIS data';
 }
+
 async function runSearch() {
   const raw = document.getElementById('addr-input').value.trim();
   if (!raw) return;
   document.getElementById('search-btn').disabled = true;
-  renderLoading();
+  renderLoading('Searching Gaston County GIS…');
   try {
     const safe = raw.toUpperCase().replace(/'/g, "''");
     const where = `WHOLE_ADDRESS LIKE '%${safe}%'`;
@@ -222,8 +285,8 @@ async function runSearch() {
     document.getElementById('search-btn').disabled = false;
   }
 }
+
 document.getElementById('addr-input').addEventListener('keydown', e => { if (e.key === 'Enter') runSearch(); });
 </script>
-
-
-</body><grammarly-desktop-integration data-grammarly-shadow-root="true"></grammarly-desktop-integration></html>
+</body>
+</html>
