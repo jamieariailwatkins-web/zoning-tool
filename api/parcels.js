@@ -1,3 +1,5 @@
+const https = require('https');
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -21,18 +23,29 @@ export default async function handler(req, res) {
     resultRecordCount: resultRecordCount || '10'
   });
 
-  const url = `https://gis.gastoncountync.gov/publicgis/rest/services/PublicGIS/Parcels/MapServer/11/query?${params}`;
+  const targetUrl = `https://gis.gastoncountync.gov/publicgis/rest/services/PublicGIS/Parcels/MapServer/11/query?${params}`;
 
   try {
-    const upstream = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0',
-        'Referer': 'https://gis.gastoncountync.gov/'
-      }
+    const data = await new Promise((resolve, reject) => {
+      https.get(targetUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0',
+          'Referer': 'https://gis.gastoncountync.gov/'
+        }
+      }, (response) => {
+        let body = '';
+        response.on('data', chunk => body += chunk);
+        response.on('end', () => {
+          try {
+            resolve(JSON.parse(body));
+          } catch(e) {
+            reject(new Error('Invalid JSON from GIS server'));
+          }
+        });
+      }).on('error', reject);
     });
-    if (!upstream.ok) {
-      return res.status(502).json({ error: `GIS server returned ${upstream.status}` });
-    }
-    const data = await upstream.json();
     return res.status(200).json(data);
-  } catch
+  } catch (e) {
+    return res.status(502).json({ error: e.message });
+  }
+}
