@@ -165,7 +165,7 @@ function renderCandidates(features, query) {
   const items = features.map((f, i) => {
     const a = f.attributes;
     const addr = formatAddress(a);
-    const jurisRaw = a.JURISDICT || a.JURISDICT2 || '';
+    const jurisRaw = a.DIST_TWN || a.TAX_DISTRI || '';
     const jurisKey = normalizeJuris(jurisRaw);
     const jurisLabel = jurisKey && JURIS_MAP[jurisKey] ? JURIS_MAP[jurisKey].name : (jurisRaw || 'Unknown jurisdiction');
     return `<button class="candidate-btn" onclick="selectCandidate(${i})"><div class="candidate-addr">${esc(addr)}</div><div class="candidate-sub">Parcel ${esc(a.AKPAR)} &nbsp;·&nbsp; ${esc(jurisLabel)}</div></button>`;
@@ -176,10 +176,10 @@ function selectCandidate(i) { renderParcelResult(_candidates[i]); }
 function renderParcelResult(feature) {
   const a = feature.attributes;
   const addr = formatAddress(a);
-  const jurisRaw = a.JURISDICT || a.JURISDICT2 || '';
+  const jurisRaw = a.DIST_TWN || a.TAX_DISTRI || '';
   const jurisKey = normalizeJuris(jurisRaw);
   const jurisInfo = jurisKey ? JURIS_MAP[jurisKey] : null;
-  const acres = a.DEED_ACRES ? parseFloat(a.DEED_ACRES).toFixed(2) + ' ac' : 'N/A';
+  const acres = a.DEEDAC ? parseFloat(a.DEEDAC).toFixed(2) + ' ac' : 'N/A';
   const zoning = a.ZONING || 'Not on file';
   const owner = a.CURR_NAME1 || 'N/A';
   const link = gisLink(a.AKPAR);
